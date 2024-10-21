@@ -4,10 +4,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS 
 
 app = Flask(__name__)
-CORS(app) 
-
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 client = MongoClient("mongodb://localhost:27017/")
-db = client["freelance"]
+db = client["mobileapp"]
 users = db["users"]
 
 # Register new user
@@ -35,4 +34,5 @@ def login():
     return jsonify({"message": "Login successful!"}), 200
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
+

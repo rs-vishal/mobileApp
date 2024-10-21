@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   StyleSheet,
   SafeAreaView,
@@ -8,66 +8,70 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
-} from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import axios from 'axios';
-import { API_URL } from '@env'; 
+} from "react-native";
+import Icon from "react-native-vector-icons/Feather";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import axios from "axios";
+import { API_URL } from "@env";
 
 export default function Register({ navigation }) {
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [ShowConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateForm = () => {
     let valid = true;
     let newErrors = {
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     };
 
     // Name validation
     if (!form.name) {
-      newErrors.name = 'Name is required.';
+      newErrors.name = "Name is required.";
       valid = false;
     }
 
     // Email validation
     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!form.email) {
-      newErrors.email = 'Email is required.';
+      newErrors.email = "Email is required.";
       valid = false;
     } else if (!emailPattern.test(form.email)) {
-      newErrors.email = 'Please enter a valid email.';
+      newErrors.email = "Please enter a valid email.";
       valid = false;
     }
 
     // Password validation
     if (!form.password) {
-      newErrors.password = 'Password is required.';
+      newErrors.password = "Password is required.";
       valid = false;
     } else if (form.password.length < 6) {
-      newErrors.password = 'Password should be at least 6 characters.';
+      newErrors.password = "Password should be at least 6 characters.";
       valid = false;
     }
 
     // Confirm Password validation
     if (!form.confirmPassword) {
-      newErrors.confirmPassword = 'Confirm Password is required.';
+      newErrors.confirmPassword = "Confirm Password is required.";
       valid = false;
     } else if (form.confirmPassword !== form.password) {
-      newErrors.confirmPassword = 'Passwords do not match.';
+      newErrors.confirmPassword = "Passwords do not match.";
       valid = false;
     }
 
@@ -79,32 +83,30 @@ export default function Register({ navigation }) {
     if (!validateForm()) {
       return;
     }
-  
     try {
-      console.log("Sending data:", form);  // Log form data
+      console.log("Sending data:", form); // Log form data
       const response = await axios.post(`${API_URL}/register`, {
         name: form.name,
         email: form.email,
         password: form.password,
       });
-      console.log("Response:", response);  // Log response
-      if (response.status === 200) {
+      console.log("Response:", response); // Log response
+      if (response.status === 201) {
         Alert.alert("Success", "Registration successful!");
         navigation.navigate("Login");
       }
     } catch (error) {
-      console.error("Error:", error);  // Log error details
-      if (error.response && error.response.status === 400) {
+      console.error("Error:", error); // Log error details
+      if (error.response && error.response.status === 409) {
         Alert.alert("Error", "User already exists!");
       } else {
         Alert.alert("Error", "Something went wrong!");
       }
     }
   };
-  
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#e8ecf4' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#e8ecf4" }}>
       <KeyboardAwareScrollView style={styles.container}>
         <View style={styles.header}>
           <Image
@@ -112,11 +114,10 @@ export default function Register({ navigation }) {
             resizeMode="contain"
             style={styles.headerImg}
             source={{
-              uri: 'https://imgs.search.brave.com/PLEkY9e9vceZZK9SluNtb51d2cq4dy0c73GVmY0LnwI/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly90ZW1w/bGF0ZS5jYW52YS5j/b20vRUFFRkg5V0k0/YWMvMS8wLzQwMHct/RjRRQm1Bc2JpUjQu/anBn',
+              uri: "https://imgs.search.brave.com/PLEkY9e9vceZZK9SluNtb51d2cq4dy0c73GVmY0LnwI/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly90ZW1w/bGF0ZS5jYW52YS5j/b20vRUFFRkg5V0k0/YWMvMS8wLzQwMHct/RjRRQm1Bc2JpUjQu/anBn",
             }}
           />
           <Text style={styles.companyname}>companyname</Text>
-
           <Text style={styles.title}>Create an account</Text>
         </View>
 
@@ -133,7 +134,9 @@ export default function Register({ navigation }) {
               style={styles.inputControl}
               value={form.name}
             />
-            {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
+            {errors.name ? (
+              <Text style={styles.errorText}>{errors.name}</Text>
+            ) : null}
           </View>
 
           {/* Email Input */}
@@ -149,39 +152,69 @@ export default function Register({ navigation }) {
               style={styles.inputControl}
               value={form.email}
             />
-            {errors.email ? <Text style={styles.errorText}>{errors.email}</Text> : null}
+            {errors.email ? (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            ) : null}
           </View>
 
           {/* Password Input */}
           <View style={styles.input}>
             <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              autoCorrect={false}
-              secureTextEntry={true}
-              onChangeText={(password) => setForm({ ...form, password })}
-              placeholder="********"
-              placeholderTextColor="#6b7280"
-              style={styles.inputControl}
-              value={form.password}
-            />
-            {errors.password ? <Text style={styles.errorText}>{errors.password}</Text> : null}
+            <View style={styles.passwordContainer}>
+              <TextInput
+                autoCorrect={false}
+                secureTextEntry={!showPassword} // Toggle visibility based on `showPassword`
+                onChangeText={(password) => setForm({ ...form, password })}
+                placeholder="********"
+                placeholderTextColor="#6b7280"
+                style={styles.inputControl}
+                value={form.password}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+              >
+                <Icon
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={24}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
+            </View>
+            {errors.password ? (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            ) : null}
           </View>
 
           {/* Confirm Password Input */}
           <View style={styles.input}>
             <Text style={styles.inputLabel}>Confirm Password</Text>
-            <TextInput
-              autoCorrect={false}
-              secureTextEntry={true}
-              onChangeText={(confirmPassword) =>
-                setForm({ ...form, confirmPassword })
-              }
-              placeholder="********"
-              placeholderTextColor="#6b7280"
-              style={styles.inputControl}
-              value={form.confirmPassword}
-            />
-            {errors.confirmPassword ? <Text style={styles.errorText}>{errors.confirmPassword}</Text> : null}
+            <View style={styles.passwordContainer}>
+              <TextInput
+                autoCorrect={false}
+                secureTextEntry={!ShowConfirmPassword} // Toggle visibility based on `ShowConfirmPassword`
+                onChangeText={(confirmPassword) =>
+                  setForm({ ...form, confirmPassword })
+                }
+                placeholder="********"
+                placeholderTextColor="#6b7280"
+                style={styles.inputControl}
+                value={form.confirmPassword}
+              />
+              <TouchableOpacity
+                onPress={() => setShowConfirmPassword(!ShowConfirmPassword)}
+                style={styles.eyeButtonconform}
+              >
+                <Icon
+                  name={ShowConfirmPassword ? "eye-off" : "eye"}
+                  size={24}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
+            </View>
+            {errors.confirmPassword ? (
+              <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+            ) : null}
           </View>
 
           {/* Sign up Button */}
@@ -303,5 +336,15 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 12,
     marginTop: 4,
+  },
+  eyeButton: {
+    position: "absolute",
+    right: 15,
+    top:14,
+  },
+  eyeButtonconform: {
+    position: "absolute",
+    right: 15,
+    top:14,
   },
 });
