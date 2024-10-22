@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,10 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  TextInput,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 const services = [
   { name: "Airtel", image: require("../assets/airtel.png") },
@@ -20,18 +22,38 @@ const services = [
   { name: "Reliance Jio", image: require("../assets/jio.png") },
   { name: "Vi Prepaid", image: require("../assets/vi.png") },
 ];
-
 const specialServices = [
   { name: "Airtel", image: require("../assets/airtel.png") },
   { name: "Reliance Jio", image: require("../assets/jio.png") },
 ];
 
 const Service = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchVisible, setSearchVisible] = useState(false);
+  const navigation = useNavigation();
+  
+
+  // Toggle search visibility if toggleSearch is passed in params
+  useEffect(() => {
+    navigation.setParams({ triggerSearch: handleSearchToggle });
+  }, []);
+
+  const handleSearchToggle = () => {
+    setSearchVisible(prevState => !prevState); // Toggle between true/false
+  };
+
+  
+  const filteredServices = services.filter((service) =>
+    service.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredSpecialServices = specialServices.filter((specialServices) =>
+    specialServices.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const renderServiceItem = ({ item }) => (
     <View style={styles.serviceItem}>
-      <TouchableOpacity
-        onPress={() => Alert.alert(`${item.name} pressed!`)}
-      >
+      <TouchableOpacity onPress={() => Alert.alert("Service Selected", `${item.name} pressed!`)}>
         <Image source={item.image} style={styles.serviceImage} />
         <View style={styles.titleContainer}>
           <Text style={styles.serviceText}>{item.name}</Text>
@@ -43,29 +65,33 @@ const Service = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="default" />
-      {/* Top Bar */}
-      <View style={styles.topBar}>
-        <MaterialIcons name="arrow-back" size={24} color="white" />
-        <Text style={styles.topBarText}>Service Provider</Text>
-        <MaterialIcons name="search" size={24} color="white" />
-      </View>
+
+      {/* Show TextInput when search is visible */}
+      {isSearchVisible && (
+        <TextInput
+          style={styles.input}
+          placeholder="Type to search..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoFocus={true}
+          accessibilityLabel="Search services"
+        />
+      )}
 
       {/* Service Providers List */}
       <FlatList
-        data={services}
+        data={filteredServices}
         renderItem={renderServiceItem}
         keyExtractor={(item) => item.name}
         numColumns={3}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.listContainer}
       />
-
-      {/* Special Recharge Networks */}
-      <Text style={styles.sectionTitle}>
+<Text style={styles.sectionTitle}>
         Special Recharge Networks (Margin Low)
       </Text>
       <FlatList
-        data={specialServices}
+        data={filteredSpecialServices}
         renderItem={renderServiceItem}
         keyExtractor={(item) => item.name}
         numColumns={3}
@@ -80,22 +106,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f0f0f0",
-  },
-  topBar: {
-    backgroundColor: "#03e7fc",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 10,
-  },
-  topBarText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  balanceText: {
-    color: "white",
-    fontSize: 16,
   },
   serviceItem: {
     flex: 1,
@@ -128,7 +138,14 @@ const styles = StyleSheet.create({
     color: "red",
     marginVertical: 10,
   },
-  
+  input: {
+    backgroundColor: "#fff",
+    padding: 10,
+    margin: 10,
+    borderRadius: 5,
+    borderColor: "#ddd",
+    borderWidth: 1,
+  },
 });
 
 export default Service;
