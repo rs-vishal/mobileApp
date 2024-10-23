@@ -1,45 +1,57 @@
 import axios from "axios";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { API_URL } from "@env";
 
-// Create context
 export const UserContext = createContext();
 
-// UserProvider component
 export const UserProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [error, setError] = useState(null); 
+  const [user, setUser] = useState(null);
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const response = await axios.get(`${API_URL}/session`);
-                
-                if (response.status === 200) {
-                    const data = response.data;
-                    const userData = {
-                        id: data.id,
-                        username: data.username,
-                        email: data.email,
-                        role: data.role
-                    };
-                    setUser(userData);
-                    setIsAuthenticated(true);
-                } else {
-                    setError(data.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                setError('Failed to fetch profile');
-            }
-        };
+  const loadUserFromStorage = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Error loading user data from AsyncStorage:", error);
+    }
+  };
 
-        fetchUserData(); 
-    }, []);
+  const fetchUserData = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/user`);
+      const fetchedUser = response.data;
+      console.log("Fetched user data:", fetchedUser);
+      setUser(fetchedUser);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
 
-    return (
-        <UserContext.Provider value={{ user, isAuthenticated, error }}>
-            {children}
-        </UserContext.Provider>
-    );
+  const handleLogin = async (credentials) => {
+    try {
+      const response = await axios.post(`${API_URL}/login`, credentials);
+      const loggedInUser = response.data;
+
+      // Save user data to AsyncStorage
+      await AsyncStorage.setItem("user", JSON.stringify(loggedInUser));
+
+      // Fetch the user data after successful login
+      fetchUserData();
+    } catch (error) {
+      console.error("Error during login:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadUserFromStorage();
+  }, []);
+
+  return (
+    <UserContext.Provider value={{ user, setUser, handleLogin }}>
+      {children}
+    </UserContext.Provider>
+  );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   StyleSheet,
   SafeAreaView,
@@ -9,64 +9,61 @@ import {
   TextInput,
   Alert,
 } from "react-native";
+import Icon from "react-native-vector-icons/Feather";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import axios from "axios"; 
-import { API_URL } from '@env';
+import { API_URL } from "@env";
+import { UserContext } from "../context/Appcontext"; // Import UserContext
 
-export default function Login({ navigation }) { 
+export default function Login({ navigation }) {
+  const { handleLogin } = useContext(UserContext); // Access handleLogin from context
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
-  
-  const [formErrors, setFormErrors] = useState({
+
+  const [errors, setErrors] = useState({
     email: "",
     password: "",
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const validateForm = () => {
     let valid = true;
-    let errors = { email: "", password: "" };
+    let newErrors = {
+      email: "",
+      password: "",
+    };
 
-    // Email Validation
+    // Email validation
+    const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!form.email) {
-      errors.email = "Email is required!";
+      newErrors.email = "Email is required.";
       valid = false;
-    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
-      errors.email = "Please enter a valid email!";
+    } else if (!emailPattern.test(form.email)) {
+      newErrors.email = "Please enter a valid email.";
       valid = false;
     }
 
-    // Password Validation
+    // Password validation
     if (!form.password) {
-      errors.password = "Password is required!";
-      valid = false;
-    } else if (form.password.length < 6) {
-      errors.password = "Password must be at least 6 characters!";
+      newErrors.password = "Password is required.";
       valid = false;
     }
 
-    setFormErrors(errors);
+    setErrors(newErrors);
     return valid;
   };
 
-  const handleLogin = async () => {
+  const handleLoginPress = async () => {
     if (!validateForm()) {
       return;
     }
-    
     try {
-      const response = await axios.post(`${API_URL}/login`, form); 
-      if (response.status === 200) {
-        Alert.alert("Success", "Login successful!");
-        navigation.navigate("Login");
-      }
+      await handleLogin(form); // Call handleLogin from context
+      navigation.navigate("Service", { successMessage: "Login successful!" });
     } catch (error) {
-      if (error.response && error.response.status === 401) {
-        Alert.alert("Error", "Invalid credentials!");
-      } else {
-        Alert.alert("Error", "Something went wrong!");
-      }
+      Alert.alert("Error", "Something went wrong!");
     }
   };
 
@@ -82,61 +79,66 @@ export default function Login({ navigation }) {
               uri: "https://imgs.search.brave.com/PLEkY9e9vceZZK9SluNtb51d2cq4dy0c73GVmY0LnwI/rs:fit:500:0:0:0/g:ce/aHR0cHM6Ly90ZW1w/bGF0ZS5jYW52YS5j/b20vRUFFRkg5V0k0/YWMvMS8wLzQwMHct/RjRRQm1Bc2JpUjQu/anBn",
             }}
           />
-          <Text style={styles.companyname}>companyname</Text>
-          <Text style={styles.title}>Login in</Text>
+          <Text style={styles.companyname}>Company Name</Text>
+          <Text style={styles.title}>Log in to your account</Text>
         </View>
 
         <View style={styles.form}>
+          {/* Email Input */}
           <View style={styles.input}>
-            <Text style={styles.inputLabel}>Email address</Text>
+            <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               autoCapitalize="none"
               autoCorrect={false}
-              clearButtonMode="while-editing"
               keyboardType="email-address"
               onChangeText={(email) => setForm({ ...form, email })}
               placeholder="example@email.com"
               placeholderTextColor="#6b7280"
-              style={[styles.inputControl, formErrors.email && { borderColor: 'red' }]}
+              style={styles.inputControl}
               value={form.email}
             />
-            {formErrors.email ? (
-              <Text style={styles.errorText}>{formErrors.email}</Text>
+            {errors.email ? (
+              <Text style={styles.errorText}>{errors.email}</Text>
             ) : null}
           </View>
 
+          {/* Password Input */}
           <View style={styles.input}>
             <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              autoCorrect={false}
-              clearButtonMode="while-editing"
-              onChangeText={(password) => setForm({ ...form, password })}
-              placeholder="********"
-              placeholderTextColor="#6b7280"
-              style={[styles.inputControl, formErrors.password && { borderColor: 'red' }]}
-              secureTextEntry={true}
-              value={form.password}
-            />
-            {formErrors.password ? (
-              <Text style={styles.errorText}>{formErrors.password}</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                autoCorrect={false}
+                secureTextEntry={!showPassword} // Toggle visibility based on `showPassword`
+                onChangeText={(password) => setForm({ ...form, password })}
+                placeholder="********"
+                placeholderTextColor="#6b7280"
+                style={styles.inputControl}
+                value={form.password}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeButton}
+              >
+                <Icon
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={24}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
+            </View>
+            {errors.password ? (
+              <Text style={styles.errorText}>{errors.password}</Text>
             ) : null}
           </View>
 
+          {/* Login Button */}
           <View style={styles.formAction}>
-            <TouchableOpacity onPress={handleLogin}>
+            <TouchableOpacity onPress={handleLoginPress}>
               <View style={styles.btn}>
-                <Text style={styles.btnText}>Login in</Text>
+                <Text style={styles.btnText}>Log in</Text>
               </View>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            onPress={() => {
-              // handle forgot password
-            }}
-          >
-            <Text style={styles.formLink}>Forgot password?</Text>
-          </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
 
@@ -158,6 +160,7 @@ export default function Login({ navigation }) {
 
 const styles = StyleSheet.create({
   container: {
+    top: -70,
     paddingVertical: 24,
     flexGrow: 1,
     flexShrink: 1,
@@ -169,12 +172,6 @@ const styles = StyleSheet.create({
     color: "#1D2A32",
     marginBottom: 6,
   },
-  subtitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#929292",
-  },
-  /** Header */
   header: {
     alignItems: "center",
     justifyContent: "center",
@@ -194,7 +191,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     alignSelf: "center",
   },
-  /** Form */
   form: {
     marginBottom: 24,
     paddingHorizontal: 24,
@@ -206,22 +202,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 16,
   },
-  formLink: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#075eec",
-    textAlign: "center",
-  },
   formFooter: {
-    
-    paddingVertical: 24,
+    paddingVertical: 14,
     fontSize: 15,
+    marginBottom: 14,
+    marginTop: -64,
     fontWeight: "600",
     color: "#222",
     textAlign: "center",
     letterSpacing: 0.15,
   },
-  /** Input */
   input: {
     marginBottom: 16,
   },
@@ -243,27 +233,31 @@ const styles = StyleSheet.create({
     borderColor: "#C9D3DB",
     borderStyle: "solid",
   },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  /** Button */
   btn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    backgroundColor: "#075eec",
-    borderColor: "#075eec",
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: "#4f7fff",
   },
   btnText: {
-    fontSize: 18,
-    lineHeight: 26,
-    fontWeight: "600",
     color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  passwordContainer: {
+    position: "relative",
+  },
+  eyeButton: {
+    position: "absolute",
+    right: 10,
+    top: 12,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginTop: 4,
   },
 });
+  

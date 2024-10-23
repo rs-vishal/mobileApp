@@ -11,7 +11,6 @@ import {
   Alert,
   TextInput,
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 const services = [
@@ -30,19 +29,27 @@ const specialServices = [
 const Service = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchVisible, setSearchVisible] = useState(false);
-  const navigation = useNavigation();
-  
+  const [successMessage, setSuccessMessage] = useState(null);
 
-  // Toggle search visibility if toggleSearch is passed in params
+  const navigation = useNavigation();
+  const route = useRoute();
+
   useEffect(() => {
     navigation.setParams({ triggerSearch: handleSearchToggle });
-  }, []);
+
+    if (route.params?.successMessage) {
+      setSuccessMessage(route.params.successMessage);
+
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 1000);
+    }
+  }, [route.params?.successMessage]);
 
   const handleSearchToggle = () => {
-    setSearchVisible(prevState => !prevState); // Toggle between true/false
+    setSearchVisible(prevState => !prevState);    
   };
 
-  
   const filteredServices = services.filter((service) =>
     service.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -87,7 +94,7 @@ const Service = () => {
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.listContainer}
       />
-<Text style={styles.sectionTitle}>
+      <Text style={styles.sectionTitle}>
         Special Recharge Networks (Margin Low)
       </Text>
       <FlatList
@@ -98,6 +105,13 @@ const Service = () => {
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.listContainer}
       />
+
+      {/* Success Message at the bottom */}
+      {successMessage && (
+        <View style={styles.successMessage}>
+          <Text style={styles.successText}>{successMessage}</Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -146,6 +160,26 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderWidth: 1,
   },
+  successMessage: {
+    position: "absolute",
+    bottom: 20, 
+    left: 20,   
+    right: 20,  
+    backgroundColor: "rgba(15, 17, 16, 0.94)", 
+    padding: 15,
+    zIndex: 10,  
+    opacity: 0.7, 
+    borderRadius: 20, 
+    elevation: 10, 
+  },
+  successText: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+    fontSize: 16,
+  },
+  
+
 });
 
 export default Service;

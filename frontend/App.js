@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createDrawerNavigator } from '@react-navigation/drawer';
-import { Ionicons } from '@expo/vector-icons'; // You can use any icon library
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import { Ionicons } from '@expo/vector-icons';
+import { UserProvider, UserContext } from './context/Appcontext'; // Importing the app context
 import Login from './screens/Login';
 import Register from './screens/Register';
 import Service from './screens/Service';
@@ -36,47 +37,66 @@ function BackButton({ navigation }) {
   );
 }
 
+// Custom Drawer Content to display username
+function CustomDrawerContent(props) {
+  const { user } = React.useContext(UserContext); // Access user from context
+
+  return (
+    <DrawerContentScrollView {...props}>
+      <View style={{ padding: 20 }}>
+        {user && (
+          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Hello, {user.username}!</Text>
+        )}
+      </View>
+      <DrawerItemList {...props} />
+    </DrawerContentScrollView>
+  );
+}
+
 export default function App() {
   return (
-    <NavigationContainer>
-      <Drawer.Navigator 
-        initialRouteName="Service" 
-        drawerPosition="right"
-      >
-        <Drawer.Screen 
-          name="Service" 
-          component={Service} 
-          options={({ navigation, route }) => ({
-            headerRight: () => (
-              <View style={{ flexDirection: 'row' }}>
+    <UserProvider>
+      <NavigationContainer>
+        <Drawer.Navigator 
+          initialRouteName="Service" 
+          drawerPosition="right"
+          drawerContent={(props) => <CustomDrawerContent {...props} />} // Set custom drawer content
+        >
+          <Drawer.Screen 
+            name="Service" 
+            component={Service} 
+            options={({ navigation, route }) => ({
+              headerRight: () => (
+                <View style={{ flexDirection: 'row' }}>
+                  <SearchButton onPressSearch={() => route.params?.triggerSearch()} />
+                  <CustomDrawerButton navigation={navigation} />
+                </View>
+              ),
+              headerLeft: () => <BackButton navigation={navigation} />,
+            })}
+          />
+          <Drawer.Screen 
+            name="Login" 
+            component={Login} 
+            options={({ navigation }) => ({
+              headerRight: () => (
                 <CustomDrawerButton navigation={navigation} />
-                <SearchButton onPressSearch={() => route.params?.triggerSearch()} />
-              </View>
-            ),
-            headerLeft: () => <BackButton navigation={navigation} />,
-          })}
-        />
-        <Drawer.Screen 
-          name="Login" 
-          component={Login} 
-          options={({ navigation }) => ({
-            headerRight: () => (
-              <CustomDrawerButton navigation={navigation} />
-            ), 
-            headerLeft: () => null, 
-          })}
-        />
-        <Drawer.Screen 
-          name="Register" 
-          component={Register} 
-          options={({ navigation }) => ({
-            headerRight: () => (
-              <CustomDrawerButton navigation={navigation} />
-            ), 
-            headerLeft: () => null,  
-          })}
-        />
-      </Drawer.Navigator>
-    </NavigationContainer>
+              ), 
+              headerLeft: () => null, 
+            })}
+          />
+          <Drawer.Screen 
+            name="Register" 
+            component={Register} 
+            options={({ navigation }) => ({
+              headerRight: () => (
+                <CustomDrawerButton navigation={navigation} />
+              ), 
+              headerLeft: () => null,  
+            })}
+          />
+        </Drawer.Navigator>
+      </NavigationContainer>
+    </UserProvider>
   );
 }

@@ -33,6 +33,17 @@ def login():
         return jsonify({"message": "Invalid credentials!"}), 401
     return jsonify({"message": "Login successful!"}), 200
 
+
+@app.route('/user', methods=['GET'])
+def get_user():
+    users = users.users.find()  
+    user_list = []
+    for user in users:
+        user['_id'] = str(user['_id'])  
+        user_list.append(user)
+
+    return jsonify(user_list) 
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
 
