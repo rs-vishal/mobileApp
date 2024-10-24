@@ -39,13 +39,13 @@ function BackButton({ navigation }) {
 
 // Custom Drawer Content to display username
 function CustomDrawerContent(props) {
-  const { user } = React.useContext(UserContext); // Access user from context
+  const { user } = React.useContext(UserContext); 
 
   return (
     <DrawerContentScrollView {...props}>
       <View style={{ padding: 20 }}>
         {user && (
-          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Hello, {user.username}!</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Hello, {user.name}!</Text>
         )}
       </View>
       <DrawerItemList {...props} />
@@ -60,7 +60,7 @@ export default function App() {
         <Drawer.Navigator 
           initialRouteName="Service" 
           drawerPosition="right"
-          drawerContent={(props) => <CustomDrawerContent {...props} />} // Set custom drawer content
+          drawerContent={(props) => <CustomDrawerContent {...props} />} 
         >
           <Drawer.Screen 
             name="Service" 

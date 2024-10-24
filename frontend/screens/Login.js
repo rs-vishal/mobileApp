@@ -11,11 +11,12 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { UserContext } from "../context/Appcontext";
+import axios from "axios";
 import { API_URL } from "@env";
-import { UserContext } from "../context/Appcontext"; // Import UserContext
 
 export default function Login({ navigation }) {
-  const { handleLogin } = useContext(UserContext); // Access handleLogin from context
+  const { handleLogin } = useContext(UserContext);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -58,14 +59,24 @@ export default function Login({ navigation }) {
   const handleLoginPress = async () => {
     if (!validateForm()) {
       return;
-    }
+    }   
     try {
-      await handleLogin(form); // Call handleLogin from context
-      navigation.navigate("Service", { successMessage: "Login successful!" });
+      const response = await axios.post(`${API_URL}/login`, form);
+      console.log("Response:", response);
+      
+      // Check for successful login
+      if (response.status === 200) { // Ensure status code is 200 for success
+        await handleLogin(form.email); // Correctly pass the email
+        navigation.navigate("Service", { successMessage: "Login successful!" });        
+      } else {
+        Alert.alert("Error", "Invalid credentials!"); // Handle other status codes if necessary
+      }
     } catch (error) {
-      Alert.alert("Error", "Something went wrong!");
+      console.error("Error during login:", error);
+      Alert.alert("Error", "Something went wrong!"); // Notify user of the error
     }
   };
+  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#e8ecf4" }}>
@@ -112,18 +123,14 @@ export default function Login({ navigation }) {
                 onChangeText={(password) => setForm({ ...form, password })}
                 placeholder="********"
                 placeholderTextColor="#6b7280"
-                style={styles.inputControl}
+                style={[styles.inputControl, { flex: 1 }]}
                 value={form.password}
               />
               <TouchableOpacity
+                style={{ padding: 8 }}
                 onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeButton}
               >
-                <Icon
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={24}
-                  color="#6b7280"
-                />
+                <Icon name={showPassword ? "eye" : "eye-off"} size={20} />
               </TouchableOpacity>
             </View>
             {errors.password ? (
@@ -132,132 +139,97 @@ export default function Login({ navigation }) {
           </View>
 
           {/* Login Button */}
-          <View style={styles.formAction}>
-            <TouchableOpacity onPress={handleLoginPress}>
-              <View style={styles.btn}>
-                <Text style={styles.btnText}>Log in</Text>
-              </View>
+          <TouchableOpacity
+            onPress={handleLoginPress}
+            style={styles.submitButton}
+          >
+            <Text style={styles.submitButtonText}>Log in</Text>
+          </TouchableOpacity>
+
+          {/* Register Redirect */}
+          <View style={styles.redirectContainer}>
+            <Text style={styles.redirectText}>Don’t have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+              <Text style={styles.redirectLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
       </KeyboardAwareScrollView>
-
-      <TouchableOpacity
-        onPress={() => {
-          navigation.navigate("Register");
-        }}
-      >
-        <Text style={styles.formFooter}>
-          Don't have an account?{" "}
-          <Text style={{ textDecorationLine: "underline", color: "blue" }}>
-            Sign up
-          </Text>
-        </Text>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    top: -70,
-    paddingVertical: 24,
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
-  },
-  title: {
-    fontSize: 31,
-    fontWeight: "700",
-    color: "#1D2A32",
-    marginBottom: 6,
+    flex: 1,
+    paddingHorizontal: 16,
   },
   header: {
     alignItems: "center",
-    justifyContent: "center",
-    marginVertical: 36,
+    marginTop: 40,
   },
   headerImg: {
-    width: 80,
-    height: 70,
-    marginTop: 10,
-    top: 20,
-    alignSelf: "center",
-    marginBottom: 36,
+    height: 60,
+    width: 60,
   },
   companyname: {
-    width: 100,
-    height: 40,
-    fontSize: 15,
-    alignSelf: "center",
+    fontWeight: "bold",
+    fontSize: 24,
+    marginTop: 8,
+  },
+  title: {
+    fontSize: 16,
+    marginTop: 8,
   },
   form: {
-    marginBottom: 24,
-    paddingHorizontal: 24,
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
-  },
-  formAction: {
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  formFooter: {
-    paddingVertical: 14,
-    fontSize: 15,
-    marginBottom: 14,
-    marginTop: -64,
-    fontWeight: "600",
-    color: "#222",
-    textAlign: "center",
-    letterSpacing: 0.15,
+    marginTop: 40,
   },
   input: {
     marginBottom: 16,
   },
   inputLabel: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#222",
     marginBottom: 8,
+    color: "#6b7280",
   },
   inputControl: {
-    height: 50,
     backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#222",
+    padding: 12,
+    borderRadius: 6,
+    borderColor: "#d1d5db",
     borderWidth: 1,
-    borderColor: "#C9D3DB",
-    borderStyle: "solid",
-  },
-  btn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 50,
-    borderRadius: 12,
-    backgroundColor: "#4f7fff",
-  },
-  btnText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
   },
   passwordContainer: {
-    position: "relative",
-  },
-  eyeButton: {
-    position: "absolute",
-    right: 10,
-    top: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 6,
+    borderColor: "#d1d5db",
+    borderWidth: 1,
   },
   errorText: {
     color: "red",
-    fontSize: 14,
     marginTop: 4,
   },
+  submitButton: {
+    backgroundColor: "#374151",
+    padding: 16,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  redirectContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 16,
+  },
+  redirectText: {
+    color: "#6b7280",
+  },
+  redirectLink: {
+    color: "#1f2937",
+    fontWeight: "bold",
+  },
 });
-  

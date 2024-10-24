@@ -19,27 +19,15 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  const fetchUserData = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/user`);
-      const fetchedUser = response.data;
-      console.log("Fetched user data:", fetchedUser);
-      setUser(fetchedUser);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
+  
 
-  const handleLogin = async (credentials) => {
+  const handleLogin = async (email) => {
     try {
-      const response = await axios.post(`${API_URL}/login`, credentials);
+      const response = await axios.get(`${API_URL}/user/${email}`);
       const loggedInUser = response.data;
-
-      // Save user data to AsyncStorage
+      setUser(loggedInUser)
       await AsyncStorage.setItem("user", JSON.stringify(loggedInUser));
-
-      // Fetch the user data after successful login
-      fetchUserData();
+      
     } catch (error) {
       console.error("Error during login:", error);
     }
